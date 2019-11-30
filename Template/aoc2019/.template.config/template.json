@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Dave Cluderay",
+    "classifications": [ "Common", "Console", "C#8" ],
+    "identity": "AdventOfCode2019.CSharpConsole",
+    "name": "Advent of Code 2019 (C# 8 Console App)",
+    "shortName": "aoc2019",
+    "sourceName": "Aoc2019",
+    "preferNameDirectory": true,
+    "tags": {
+      "language": "C#",
+      "type": "project"
+    }
+  }
