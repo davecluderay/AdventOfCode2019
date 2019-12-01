@@ -12,10 +12,7 @@ namespace Aoc2019_Day01
             var filePath      = Path.Combine(directoryPath, fileName);
             if (!File.Exists(filePath)) throw new Exception($"File not found: {filePath}");
 
-            var lines = File.ReadAllLines(filePath);
-            Console.WriteLine($"Read {lines.Length} line(s) from input file: {filePath}");
-            
-            return lines;
+            return File.ReadAllLines(filePath);
         }
     }
 }
