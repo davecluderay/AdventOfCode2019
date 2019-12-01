@@ -4,15 +4,16 @@ using System.Linq;
 
 namespace Aoc2019_Day01
 {
-    public class Solution
+    internal class Solution
     {
         public string Title => "Day 1: The Tyranny of the Rocket Equation";
+
         public object PartOne()
         {
             return ReadModuleMasses().Select(CalculateFuelRequired)
                                      .Sum();
         }
-
+        
         public object PartTwo()
         {
             var totalFuel = 0;
