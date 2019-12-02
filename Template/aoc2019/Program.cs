@@ -17,7 +17,6 @@ namespace Aoc2019
                 Console.WriteLine();
 
                 var result1 = solution.PartOne();
-                Console.WriteLine();
                 Console.Write("Part One Result: ");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(result1);
@@ -25,7 +24,6 @@ namespace Aoc2019
                 Console.WriteLine();
 
                 var result2 = solution.PartTwo();
-                Console.WriteLine();
                 Console.Write("Part Two Result: ");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(result2);
