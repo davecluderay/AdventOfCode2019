@@ -13,5 +13,13 @@ namespace Aoc2019
 
             File.WriteAllLines(filePath, lines);
         }
+        
+        public static void WriteAllText(string content, string fileName = null)
+        {
+            var directoryPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+            var filePath      = Path.Combine(directoryPath, fileName ?? "output.txt");
+
+            File.WriteAllText(filePath, content);
+        }
     }
 }
