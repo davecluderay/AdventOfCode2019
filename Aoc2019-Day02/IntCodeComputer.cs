@@ -9,11 +9,10 @@ namespace Aoc2019_Day02
 
         public void LoadProgram(string fileName = null)
         {
-            _memory = InputFile.ReadAllLines()
-                .Single()
-                .Split(',')
-                .Select(int.Parse)
-                .ToArray();
+            _memory = InputFile.ReadAllText()
+                               .Split(',')
+                               .Select(int.Parse)
+                               .ToArray();
         }
 
         public void EnterInputs(int noun, int verb)
