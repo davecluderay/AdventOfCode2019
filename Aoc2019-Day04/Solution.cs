@@ -12,32 +12,32 @@ namespace Aoc2019_Day04
 
         public object PartOne()
         {
-            var candidates = Enumerable.Range(MinValue, MaxValue - MinValue + 1).Select(x => x.ToString());
-            var matches    = FindValidPasswords(candidates, requireExactDouble: false);
+            var candidates = GetCandidatePasswords();
+            var matches = FindValidPasswords(candidates, requireExactDouble: false);
             return matches.Count();
         }
         
         public object PartTwo()
         {
-            var candidates = Enumerable.Range(MinValue, MaxValue - MinValue + 1).Select(x => x.ToString());
+            var candidates = GetCandidatePasswords();
             var matches = FindValidPasswords(candidates, requireExactDouble: true);
             return matches.Count();
         }
 
         private static IEnumerable<string> FindValidPasswords(IEnumerable<string> candidates, bool requireExactDouble)
         {
-            foreach (var text in candidates)
+            foreach (var candidate in candidates)
             {
                 var hasDouble = false;
                 var hasDecrease = false;
 
                 var index = 0;
-                while (index < text.Length)
+                while (index < candidate.Length)
                 {
-                    var first = text[index];
+                    var first = candidate[index];
                     
                     var repeatCount = 0;
-                    while (++index < text.Length && text[index] == first)
+                    while (++index < candidate.Length && candidate[index] == first)
                     {
                         repeatCount++;
                     }
@@ -47,7 +47,7 @@ namespace Aoc2019_Day04
                         hasDouble = true;
                     }
 
-                    if (index < text.Length && text[index] < first)
+                    if (index < candidate.Length && candidate[index] < first)
                     {
                         hasDecrease = true;
                     }
@@ -55,9 +55,13 @@ namespace Aoc2019_Day04
 
                 if (hasDouble && !hasDecrease)
                 {
-                    yield return text;
+                    yield return candidate;
                 }
             }
         }
+
+        private static IEnumerable<string> GetCandidatePasswords() =>
+            Enumerable.Range(MinValue, MaxValue - MinValue + 1)
+                      .Select(x => x.ToString());
     }
 }
