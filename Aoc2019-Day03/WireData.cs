@@ -14,7 +14,7 @@ internal static class WireData
     
     private static IEnumerable<(int x, int y)> ReadLineAsPoints(string line)
     {
-        var (x, y) = (x: 0, y: 0);
+        var (x, y) = (0, 0);
         yield return (x, y);
         foreach (var vector in line.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
