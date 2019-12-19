@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aoc2019_Day16
 {
@@ -9,7 +11,7 @@ namespace Aoc2019_Day16
             try
             {
                 var solution = new Solution();
-                
+
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(solution.Title);
                 Console.WriteLine(new string('-', solution.Title.Length));
