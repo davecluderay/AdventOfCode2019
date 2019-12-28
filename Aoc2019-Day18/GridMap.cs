@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 
 namespace Aoc2019_Day18
@@ -9,11 +8,13 @@ namespace Aoc2019_Day18
         private readonly HashSet<(int row, int column)> _wallPositions = new HashSet<(int row, int column)>();
         private readonly HashSet<(int row, int column)> _keyPositions  = new HashSet<(int row, int column)>();
         private readonly HashSet<(int row, int column)> _gatePositions = new HashSet<(int row, int column)>();
+        private readonly HashSet<(int row, int column)> _startPositions = new HashSet<(int row, int column)>();
         private readonly char[,] _data;
 
         public int Columns { get; }
         public int Rows { get; }
-        public (int Row, int Column) StartPosition { get; }
+
+        public (int row, int column)[] StartPositions => _startPositions.ToArray();
 
         public GridMap(string[] lines)
         {
@@ -26,7 +27,7 @@ namespace Aoc2019_Day18
             {
                 var @char = _data[row, column] = lines[row][column];
                 if (@char == '@')
-                    StartPosition = (row, column);
+                    _startPositions.Add((row, column));
                 if (@char == '#')
                     _wallPositions.Add((row, column));
                 else if (char.IsLower(@char))
@@ -40,7 +41,7 @@ namespace Aoc2019_Day18
         public bool IsWall((int row, int column) position) => _wallPositions.Contains(position);
         public bool IsKey((int row, int column)  position) => _keyPositions.Contains(position);
         public bool IsGate((int row, int column) position) => _gatePositions.Contains(position);
-        public bool IsEntryPoint((int row, int column) position) => StartPosition == position;
+        public bool IsEntryPoint((int row, int column) position) => _startPositions.Contains(position);
         
         public IEnumerable<(int x, int y)> AdjacentPositions((int row, int column) to)
         {
@@ -50,6 +51,37 @@ namespace Aoc2019_Day18
                 if (pos.row >= 0 && pos.column >= 0 && pos.row < Rows && pos.column < Columns)
                     yield return pos;
             }
+        }
+
+        public void IsolateQuadrants()
+        {
+            SetWallAt((39, 40));
+            SetWallAt((40, 40));
+            SetWallAt((41, 40));
+            SetWallAt((40, 39));
+            SetWallAt((40, 41));
+            SetStartPositionAt((39, 39));
+            SetStartPositionAt((41, 39));
+            SetStartPositionAt((39, 41));
+            SetStartPositionAt((41, 41));
+        }
+
+        private void SetWallAt((int row, int column) position)
+        {
+            _data[position.row, position.column] = '#';
+            _startPositions.Remove(position);
+            _gatePositions.Remove(position);
+            _keyPositions.Remove(position);
+            _wallPositions.Add(position);
+        }
+
+        private void SetStartPositionAt((int row, int column) position)
+        {
+            _data[position.row, position.column] = '@';
+            _startPositions.Add(position);
+            _gatePositions.Remove(position);
+            _keyPositions.Remove(position);
+            _wallPositions.Remove(position);
         }
     }
 }

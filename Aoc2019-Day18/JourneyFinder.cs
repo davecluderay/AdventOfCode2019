@@ -9,46 +9,64 @@ namespace Aoc2019_Day18
         public int FindShortestJourneyStepCount(FeatureGraph featureGraph)
         {
             var cachedFewestSteps = new Dictionary<string, int>();
-            var numberOfKeys = featureGraph.NumberOfKeys;
+            var totalNumberOfKeys = featureGraph.NumberOfKeys;
             return Follow(featureGraph.Copy(),
-                          new (MapFeature, int numberOfSteps)[] { (featureGraph.FindEntryPointFeature(), 0) });
-
-            int Follow(FeatureGraph intermediateGraph, (MapFeature feature, int numberOfSteps)[] journeySoFar)
+                          featureGraph.FindEntryPointFeatures()
+                                      .Select((f, i) => (RowNotInTableException: i, feature: f, numberOfSteps: 0))
+                                      .ToArray());
+            
+            int Follow(FeatureGraph intermediateGraph, (int robot, MapFeature feature, int numberOfSteps)[] journeySoFar)
             {
-                var keysFound = journeySoFar.Count(x => x.feature.Type == FeatureType.Key);
-                if (keysFound < numberOfKeys)
+                // If we have found all keys, we are done.
+                var numberOfKeysFound = journeySoFar.Count(x => x.feature.Type == FeatureType.Key);
+                if (numberOfKeysFound == totalNumberOfKeys)
+                    return journeySoFar.Sum(x => x.numberOfSteps);
+
+                // Based on the current state of all journeys, have we already cached the fewest steps to completion?
+                var currentPositions = journeySoFar.GroupBy(x => x.robot)
+                                                   .Select(g => (robot: g.Key, lastPosition: g.Last().feature))
+                                                   .OrderBy(x => x.robot)
+                                                   .ToArray();
+                var foundKeys = journeySoFar.Where(x => x.feature.Type == FeatureType.Key)
+                                            .Select(x => x.feature.Letter)
+                                            .OrderBy(k => k)
+                                            .ToArray();
+                var state = new string(foundKeys) + ";" + string.Join(",", currentPositions.Select(p => $"{p.robot}:{p.lastPosition.Letter}").ToArray());
+                if (cachedFewestSteps.ContainsKey(state))
                 {
-                    var currentNode     = intermediateGraph.FindNode(journeySoFar.Last().feature);
-                    var visitedFeatures = journeySoFar.Select(n => n.feature).ToHashSet();
-                    var journeySteps    = int.MaxValue;
-                    
-                    if (currentNode.Feature.Type == FeatureType.Key)
-                    {
-                        var removeGateNode = intermediateGraph.FindGateNode(currentNode.Feature.Letter);
-                        if (removeGateNode != null)
-                            intermediateGraph.Remove(removeGateNode);
-                    }
-
-                    var state = new string(journeySoFar.Select(x => x.feature.Letter).OrderBy(l => l).Append('-').Append(journeySoFar.Last().feature.Letter).ToArray());
-                    if (cachedFewestSteps.ContainsKey(state))
-                    {
-                        return cachedFewestSteps[state] + journeySoFar.Sum(n => n.numberOfSteps);
-                    }
-                    
-                    foreach (var next in FindAccessibleKeyNodes(currentNode, visitedFeatures))
-                    {
-                        var copyGraph = intermediateGraph.Without(currentNode);
-                        journeySteps = Math.Min(journeySteps, Follow(copyGraph, journeySoFar.Append((next.node.Feature, next.numberOfSetps)).ToArray()));
-                        cachedFewestSteps[state] = journeySteps - journeySoFar.Sum(n => n.numberOfSteps);
-                    }
-                    return journeySteps;
+                    return cachedFewestSteps[state] + journeySoFar.Sum(n => n.numberOfSteps);
                 }
-
-                return journeySoFar.Sum(n => n.numberOfSteps);
+                
+                // Remove the corresponding gates for any keys that were collected on the last iteration.
+                foreach (var keyPosition in currentPositions.Where(p => p.lastPosition.Type == FeatureType.Key))
+                {   
+                    var removeGateNode = intermediateGraph.FindGateNode(keyPosition.lastPosition.Letter);
+                    if (removeGateNode != null)
+                        intermediateGraph.Remove(removeGateNode);
+                }
+                
+                // Follow all possible sequences from this point.
+                var visitedFeatures = journeySoFar.Select(n => n.feature).ToHashSet();
+                var nextMoves = currentPositions.SelectMany(p =>
+                                                         {
+                                                             var fromNode = intermediateGraph.FindNode(p.lastPosition);
+                                                             return FindAccessibleKeyNodes(fromNode, visitedFeatures)
+                                                                 .Select(x => (p.robot, fromNode, toNode: x.node, x.numberOfSteps));
+                                                         });
+                var journeySteps = int.MaxValue;
+                foreach (var nextMove in nextMoves)
+                {
+                    var copyGraph = intermediateGraph.Without(nextMove.fromNode);
+                    var copyJourney = journeySoFar.Append((nextMove.robot, feature: nextMove.toNode.Feature, nextMove.numberOfSteps))
+                                                  .ToArray();
+                    journeySteps = Math.Min(journeySteps, Follow(copyGraph, copyJourney));
+                    cachedFewestSteps[state] = journeySteps - journeySoFar.Sum(n => n.numberOfSteps);
+                }
+                return journeySteps; 
             }
         }
 
-        private static (FeatureGraph.Node node, int numberOfSetps)[] FindAccessibleKeyNodes(FeatureGraph.Node startAt, HashSet<MapFeature> previouslyVisited)
+        private static (FeatureGraph.Node node, int numberOfSteps)[] FindAccessibleKeyNodes(FeatureGraph.Node startAt, HashSet<MapFeature> previouslyVisited)
         {
             var results = new List<(FeatureGraph.Node node, int numberOfSetps)>();
 

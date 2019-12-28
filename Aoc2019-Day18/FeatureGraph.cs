@@ -6,26 +6,13 @@ namespace Aoc2019_Day18
 {
     internal class FeatureGraph
     {
-        private Dictionary<MapFeature, Node> _allNodes;
+        private readonly Dictionary<MapFeature, Node> _allNodes;
         public int NumberOfKeys => _allNodes.Keys.Count(f => f.Type == FeatureType.Key);
-        public MapFeature FindEntryPointFeature() => _allNodes.Keys.SingleOrDefault(f => f.Type == FeatureType.EntryPoint);
+        public MapFeature[] FindEntryPointFeatures() => _allNodes.Keys.Where(f => f.Type == FeatureType.EntryPoint).ToArray();
 
-        private FeatureGraph(Node entryPoint)
+        private FeatureGraph(IEnumerable<Node> allNodes)
         {
-            _allNodes = new Dictionary<MapFeature, Node>();
-
-            var stack = new Stack<Node>();
-            stack.Push(entryPoint);
-            while (stack.Count > 0)
-            {
-                var node = stack.Pop();
-                _allNodes[node.Feature] = node;
-                foreach (var connection in node.Connections)
-                {
-                    if (!_allNodes.ContainsKey(connection.Node.Feature))
-                        stack.Push(connection.Node);
-                }
-            }
+            _allNodes = allNodes.ToDictionary(node => node.Feature, node => node);
         }
 
         public Node FindNode(MapFeature feature) => _allNodes[feature];
@@ -35,11 +22,14 @@ namespace Aoc2019_Day18
 
         public static FeatureGraph From(GridMap gridMap)
         {
-            var entryPoint = new Node(new MapFeature(FeatureType.EntryPoint, gridMap.StartPosition, '@'));
-            var allNodes   = new Dictionary<MapFeature, Node> { { entryPoint.Feature, entryPoint } };
+            var entryPoints = gridMap.StartPositions.Select(p => new Node(new MapFeature(FeatureType.EntryPoint, p, '@')))
+                                                    .ToArray();
+            var allNodes    = entryPoints.ToDictionary(p => p.Feature, p => p);
             
             var nodesToExamine = new Stack<Node>();
-            nodesToExamine.Push(entryPoint);
+            foreach (var entryPoint in entryPoints)
+                nodesToExamine.Push(entryPoint);
+
             while (nodesToExamine.Count > 0)
             {
                 var examineNode = nodesToExamine.Pop();
@@ -60,18 +50,15 @@ namespace Aoc2019_Day18
                 }
             }
 
-            return new FeatureGraph(entryPoint);
+            return new FeatureGraph(allNodes.Values);
         }
 
         public FeatureGraph Copy()
         {
-            var copyNodes      = new Dictionary<MapFeature, Node>();
-            var nodesToProcess = new Stack<Node>();
-            nodesToProcess.Push(_allNodes.Values.First());
-            while (nodesToProcess.Count > 0)
+            var copyNodes = new Dictionary<MapFeature, Node>();
+            
+            foreach (var nodeToProcess in _allNodes.Values)
             {
-                var nodeToProcess = nodesToProcess.Pop();
-                
                 var copy = copyNodes.ContainsKey(nodeToProcess.Feature)
                     ? copyNodes[nodeToProcess.Feature]
                     : copyNodes[nodeToProcess.Feature] = new Node(nodeToProcess.Feature);
@@ -81,14 +68,10 @@ namespace Aoc2019_Day18
                     {
                         copy.Connect(copyNodes[connection.Node.Feature], connection.NumberOfSteps);
                     }
-                    else
-                    {
-                        nodesToProcess.Push(connection.Node);
-                    }
                 }
             }
 
-            return new FeatureGraph(copyNodes.Values.First());
+            return new FeatureGraph(copyNodes.Values);
         }
 
         public FeatureGraph Without(Node excludeNode)
@@ -159,7 +142,7 @@ namespace Aoc2019_Day18
         {
             public  MapFeature Feature { get; }
             public  IEnumerable<Connection> Connections => _connections.AsEnumerable();
-            private List<Connection> _connections;
+            private readonly List<Connection> _connections;
 
             public Node(MapFeature feature)
             {
