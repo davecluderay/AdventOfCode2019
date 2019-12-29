@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Aoc2019_Day20
@@ -15,16 +14,13 @@ namespace Aoc2019_Day20
         
         public int FindShortestJourneyStepCount(MazeGraph graph)
         {
-            var cache = new Dictionary<string, int>();
             var start = graph.Vertices.Single(v => v.Type == MazeGraph.VertexType.Entrance);
             var journeySoFar = new[] { (node: start, level: 0, numberOfSteps: 0) };
-            return Follow(journeySoFar, cache);
+            return Follow(journeySoFar);
         }
 
-        private int Follow((MazeGraph.Vertex node, int level, int numberOfSteps)[] journeySoFar, Dictionary<string, int> cache)
+        private int Follow((MazeGraph.Vertex node, int level, int numberOfSteps)[] journeySoFar)
         {
-            var key = GetStateKey(journeySoFar);
-
             var journeyStepsSoFar = journeySoFar.Sum(x => x.numberOfSteps);
             if (journeySoFar.Last().node.Type == MazeGraph.VertexType.Exit)
             {
@@ -32,20 +28,11 @@ namespace Aoc2019_Day20
             }
             
             var onwardStepCount = int.MaxValue;
-            if (cache.ContainsKey(key))
+            var possibleMoves = FindPossibleNextMoves(journeySoFar);
+            foreach (var move in possibleMoves)
             {
-                onwardStepCount = cache[key];
-            }
-            else
-            {
-                var possibleMoves = FindPossibleNextMoves(journeySoFar);
-                foreach (var move in possibleMoves)
-                {
-                    var onwardJourney = journeySoFar.Append((move.node, move.level, move.numberOfSteps));
-                    onwardStepCount = Math.Min(onwardStepCount,  Follow(onwardJourney.ToArray(), cache) - journeyStepsSoFar);
-                }
-
-                cache[key] = onwardStepCount;
+                var onwardJourney = journeySoFar.Append((move.node, move.level, move.numberOfSteps));
+                onwardStepCount = Math.Min(onwardStepCount,  Follow(onwardJourney.ToArray()) - journeyStepsSoFar);
             }
 
             var totalJourneySteps = (long)journeyStepsSoFar + onwardStepCount;
@@ -93,15 +80,6 @@ namespace Aoc2019_Day20
                 : level == _maxRecursionLevel
                     ? new[] { MazeGraph.VertexType.PortalAtOuterEdge }
                     : new[] { MazeGraph.VertexType.PortalAtInnerEdge, MazeGraph.VertexType.PortalAtOuterEdge };
-        }
-
-        private static string GetStateKey((MazeGraph.Vertex node, int level, int numberOfSteps)[] journey)
-        {
-            var visitedNodes = journey.OrderBy(x => (x.level, x.node.Label, x.node.Type))
-                                      .Select(x => $"{x.level}:{x.node.Type}:{x.node.Label}");
-            var current = journey.Last();
-            var keyParts = visitedNodes.Append($"{current.level}:{current.node.Type}:{current.node.Label}");
-            return string.Join(";", keyParts);
         }
     }
 }

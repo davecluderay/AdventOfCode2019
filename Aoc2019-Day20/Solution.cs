@@ -1,3 +1,5 @@
+using System;
+
 namespace Aoc2019_Day20
 {
     internal class Solution
@@ -17,15 +19,20 @@ namespace Aoc2019_Day20
         public object PartTwo()
         {
             var lines = InputFile.ReadAllLines();
-            var maxRecursionLevel = 25;
 
             var map = new GridMap(lines);
             new MapRenderer().Render(map);
             
             var graph = MazeGraph.From(map);
 
-            var journeyFinder = new PartTwoJourneyFinder(maxRecursionLevel);
-            return journeyFinder.FindShortestJourneyStepCount(graph);
+            int maxRecursionLevel = 1;
+            while (true)
+            {
+                var journeyFinder = new PartTwoJourneyFinder(maxRecursionLevel++);
+                
+                var result = journeyFinder.FindShortestJourneyStepCount(graph);
+                if (result < int.MaxValue) return result;
+            }
         }
     }
 }
