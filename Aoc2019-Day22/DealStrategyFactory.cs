@@ -29,6 +29,49 @@ namespace Aoc2019_Day22
 
             return combined;
         }
+
+        public static (BigInteger a, BigInteger b) ApplyMultipleTimes((BigInteger a, BigInteger b) coefficients, BigInteger numberOfIterations, BigInteger deckSize)
+        {
+            // When applying the same function k times, the result is itself a linear function:
+            //   f(x    = ax         + b
+            //   ff(x)  = aax        + ab + b
+            //   fff(x) = aaax       + aab + ab + b
+            // For k iterations:
+            //   f(^k)(x)  = a(^k)x  + a(^k-1)b + a(^k-2)b .. + aab + ab + b
+            //
+            // The increment part is a^k.
+            // The offset part is a geometric series (see https://en.wikipedia.org/wiki/Geometric_progression#Geometric_series), so uses formula:
+            //   b(1 - a(^k)) / (1 - a)
+            //
+            // This is modular arithmetic, so the final shuffle function is:
+            //
+            // f(x) = a(^k)x + b(1 - a(^k)) / (1 - a)  (mod m)
+            //
+            // (where k = the number of shuffles and m = the deck size)
+            var increment = BigInteger.ModPow(coefficients.a, numberOfIterations, deckSize);
+            var offset = Calculate.Modulo(coefficients.b * (1 - BigInteger.ModPow(coefficients.a, numberOfIterations, deckSize)),
+                                          deckSize) *
+                         Calculate.Modulo(BigInteger.ModPow(1 - coefficients.a,
+                                                   deckSize - 2,
+                                                   deckSize),
+                                          deckSize);
+            var result = (a: increment,
+                          b: Calculate.Modulo(offset, deckSize));
+            return result;
+        }
+
+        public static Func<BigInteger, BigInteger> GetSourcePositionFinder((BigInteger a, BigInteger b) coefficients, BigInteger deckSize)
+        {
+            // Forwards:
+            //   f(x) = ax + b (mod m)
+            // Rearranging:
+            //   x = (x' - b) / a (mod m)
+            // And it is modular arithmetic (with relative primes), so:
+            //  x = (x' - b) mod m * a(^m-2) mod m
+            return finalPosition => Calculate.Modulo(Calculate.Modulo(finalPosition - coefficients.b, deckSize) *
+                                                     BigInteger.ModPow(coefficients.a, deckSize - 2, deckSize),
+                                                     deckSize);
+        }
         
         public static (BigInteger a, BigInteger b)[] Create(params string[] lines)
         {

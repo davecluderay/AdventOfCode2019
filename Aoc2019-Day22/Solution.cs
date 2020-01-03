@@ -16,22 +16,21 @@ namespace Aoc2019_Day22
             var shuffles = DealStrategyFactory.Create(InputFile.ReadAllLines());
             var combinedShuffle = DealStrategyFactory.Combine(shuffles, deck.Length);
 
-            var result = new BigInteger[deck.Length];
-            for (var sourcePosition = 0; sourcePosition < deck.Length; sourcePosition++)
-            {
-                var targetPosition = (int) Calculate.Modulo(combinedShuffle.a * sourcePosition + combinedShuffle.b,
-                                               deck.Length);
-                result[targetPosition] = deck[sourcePosition];
-            }
-
-            return result.Select((x, i) => (value: x, position: i))
-                         .Single(x => x.value == 2019)
-                         .position;
+            return Calculate.Modulo(combinedShuffle.a * 2019 + combinedShuffle.b,
+                                    deck.Length);
         }
         
         public object PartTwo()
         {
-            return null;
+            var deckSize = (BigInteger) 119315717514047;
+            var numberOfShuffles = (BigInteger) 101741582076661;
+            
+            var shuffles = DealStrategyFactory.Create(InputFile.ReadAllLines());
+            var combinedShuffle = DealStrategyFactory.Combine(shuffles, deckSize);
+            var megaShuffle = DealStrategyFactory.ApplyMultipleTimes(combinedShuffle, numberOfShuffles, deckSize);
+            var sourcePositionFinder = DealStrategyFactory.GetSourcePositionFinder(megaShuffle, deckSize);
+
+            return sourcePositionFinder(2020);
         }
     }
 }
