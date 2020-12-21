@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Aoc2019_Day07.Computer;
 
 namespace Aoc2019_Day07
@@ -12,92 +10,57 @@ namespace Aoc2019_Day07
         public string Title => "Day 7: Amplification Circuit";
 
         public object PartOne()
-        {
-            var amplifiers = CreateAmplifiers(5);
-            
-            var strongestOutputSignal = 0;
-            foreach (var phaseSet in GetPhaseSets(new[] { 0, 1, 2, 3, 4 }))
-            {
-                var signal = 0;
-                for (var index = 0; index < amplifiers.Length; index++)
-                {
-                    var phase = phaseSet[index];
-                    var computer = amplifiers[index];
-                    
-                    computer.LoadProgram();
-                    computer.RunProgram(phase, signal);
-                    
-                    signal = computer.GetLastOutput();
-                }
-            
-                strongestOutputSignal = Math.Max(signal, strongestOutputSignal);
-            }
+            => FindMaximumThrusterSignal(phasesStartAt: 0);
 
-            return strongestOutputSignal;
-        }
-        
         public object PartTwo()
+            => FindMaximumThrusterSignal(phasesStartAt: 5);
+
+        private long FindMaximumThrusterSignal(int phasesStartAt)
         {
-            var amplifiers = CreateAmplifiers(5);
-
-            var strongestOutputSignal = 0;
-            foreach (var phaseSet in GetPhaseSets(new[] { 5, 6, 7, 8, 9 }))
+            var maximumSignal = 0L;
+            foreach (var phaseSet in GetPhaseSets(phasesStartAt))
             {
-                var outputQueues = Enumerable.Range(1, amplifiers.Length)
-                                             .Select(_ => new BlockingCollection<int>())
-                                             .ToArray();
+                // Create the amplifiers.
+                var amps = Enumerable.Range(1, phaseSet.Length)
+                                     .Select(n => CreateAmplifier())
+                                     .ToArray();
 
-                var runTasks = amplifiers.Select(
-                    (amplifier, index) =>
+                // Chain them together by their input/output queues.
+                var outputQueues = amps.Select(_ => new Queue<long>())
+                                       .ToArray();
+                for (var i = 0; i < amps.Length; i++)
+                {
+                    var j = (i + 1) % amps.Length;
+                    amps[i].OutputTo(outputQueues[i]);
+                    outputQueues[i].Enqueue(phaseSet[j]);
+                    amps[j].InputFrom(outputQueues[i]);
+                }
+
+                // Set the initial input signal and run all amplifiers to completion.
+                outputQueues.Last().Enqueue(0L);
+                while (amps.Any(a => !a.IsHalted))
+                {
+                    for (var i = 0; i < amps.Length; i++)
+                    {
+                        // Run the amp until it generates another output or completes.
+                        var initialQueueCount = outputQueues[i].Count;
+                        while (!amps[i].IsHalted && initialQueueCount == outputQueues[i].Count)
                         {
-                            var upstreamOutputQueue = outputQueues[index == 0 ? ^1 : index - 1];
-                            var outputQueue         = outputQueues[index];
-                        
-                            var phase = phaseSet[index];
-                            var starterInputs = index == 0 ? new[] { phase, 0 } : new [] { phase };
-                            var allInputs = GetCombinedInputStream(starterInputs, upstreamOutputQueue);
+                            amps[i].Step();
+                        }
+                    }
+                }
 
-                            return Task.Factory.StartNew(
-                                () =>
-                                    {
-                                        amplifier.LoadProgram();
-                                        var outputSignals = amplifier.RunProgramIncrementally(allInputs);
-                                        try
-                                        {
-                                            foreach (var outputSignal in outputSignals)
-                                            {
-                                                outputQueue.Add(outputSignal);
-                                            }
-                                        }
-                                        finally
-                                        {
-                                            outputQueue.CompleteAdding();
-                                        }
-                                    });
-                        }).ToArray();
-                Task.WaitAll(runTasks);
-                
-                var signal = amplifiers[^1].GetLastOutput();
-                strongestOutputSignal = Math.Max(signal, strongestOutputSignal);
+                // Track the maximum signal achieved so far.
+                maximumSignal = Math.Max(maximumSignal, outputQueues[^1].Last());
             }
 
-            return strongestOutputSignal;
+            return maximumSignal;
         }
-        
-        private static IntCodeComputer[] CreateAmplifiers(int count, bool writeDebugToConsole = false)
+
+        private IEnumerable<int[]> GetPhaseSets(int startAt)
         {
-            return Enumerable.Range(1, count)
-                             .Select((x, n) => new IntCodeComputer(new DebugOutput
-                                                                   {
-                                                                       Name = $"AMP-{n}",
-                                                                       WriteToConsole = writeDebugToConsole
-                                                                   }))
-                             .ToArray();
-            
-        }
-        
-        private static IEnumerable<int[]> GetPhaseSets(int[] values)
-        {
+            var values = Enumerable.Range(startAt, 5).ToArray();
             foreach (var v1 in values)
             foreach (var v2 in values)
             foreach (var v3 in values)
@@ -110,14 +73,12 @@ namespace Aoc2019_Day07
             }
         }
 
-        private static IEnumerable<T> GetCombinedInputStream<T>(IEnumerable<T> preamble, BlockingCollection<T> stream)
+        private IntCodeComputer CreateAmplifier()
         {
-            foreach (var item in preamble)
-                yield return item;
-            
-            while (!stream.IsCompleted)
-                if (stream.TryTake(out T item))
-                    yield return item;
+            var amplifier = new IntCodeComputer();
+            amplifier.LoadProgram();
+
+            return amplifier;
         }
     }
 }

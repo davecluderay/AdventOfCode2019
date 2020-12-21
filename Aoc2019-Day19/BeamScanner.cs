@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using Aoc2019_Day19.Computer;
 
 namespace Aoc2019_Day19
@@ -8,7 +7,7 @@ namespace Aoc2019_Day19
     internal class BeamScanner
     {
         public long[,] ScanBeam((int x, int y) origin, (int width, int height) dimensions, (int minX, int minY, int maxX, int maxY)? excludeRegion = null)
-        {   
+        {
             var computer = new IntCodeComputer();
 
             var outputBuffer = new long[dimensions.height, dimensions.width];
@@ -21,11 +20,16 @@ namespace Aoc2019_Day19
                     y + origin.y >= excludeRegion.Value.minY &&
                     y + origin.y <= excludeRegion.Value.maxY)
                     continue;
-                
+
                 computer.LoadProgram();
-                var output = computer.RunProgram(InputGenerator(x + origin.x, y + origin.y))
-                                     .Single();
-                outputBuffer[y, x] = output;    
+
+                var lastOutput = 0L;
+                computer.InputFrom(InputGenerator(x + origin.x, y + origin.y));
+                computer.OutputTo(output => lastOutput = output);
+
+                computer.Run();
+
+                outputBuffer[y, x] = lastOutput;
             }
 
             return outputBuffer;
@@ -40,23 +44,24 @@ namespace Aoc2019_Day19
             {
                 var computer = new IntCodeComputer();
                 computer.LoadProgram();
-                var output = computer.RunProgram(InputGenerator(x, atY))
-                                     .Single();
-                    
-                if (firstX == null && output == 1)
+
+                var lastOutput = 0L;
+                computer.InputFrom(InputGenerator(x, atY));
+                computer.OutputTo(output => lastOutput = output);
+
+                computer.Run();
+
+                if (firstX == null && lastOutput == 1)
                     firstX = x;
-            
-                if (firstX != null && output == 0)
+
+                if (firstX != null && lastOutput == 0)
                     return (x: firstX.Value, length: x - firstX.Value);
-            
+
                 x++;
             }
         }
 
-        private Func<long> InputGenerator(int x, int y)
-        {
-            var queue = new Queue<long>(new long[] { x, y });
-            return () => queue.Dequeue();
-        }
+        private Queue<long> InputGenerator(int x, int y)
+            => new Queue<long>(new long[] { x, y });
     }
 }

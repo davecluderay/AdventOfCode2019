@@ -20,11 +20,15 @@ namespace Aoc2019_Day25
                     Console.Write("> ");
                     line = Console.ReadLine();
                 }
-                
+
                 foreach (var input in Encoding.ASCII.GetBytes($"{line}\n"))
                 {
                     Queue.Enqueue(input);
                 }
+            }
+            else
+            {
+                Console.Write(Encoding.ASCII.GetString(new[] { Queue.Peek() }));
             }
 
             return Queue.Dequeue();

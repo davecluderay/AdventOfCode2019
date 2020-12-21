@@ -1,43 +1,78 @@
 using System;
-using System.Collections.Concurrent;
-using System.Linq;
+using System.Collections.Generic;
+
+using Aoc2019_Day23.Computer;
 
 namespace Aoc2019_Day23
 {
     internal class Network
     {
-        private readonly ConcurrentDictionary<long, HostQueue> _hostQueues = new ConcurrentDictionary<long, HostQueue>();
+        private readonly List<IntCodeComputer> _nics = new List<IntCodeComputer>();
+        private readonly List<Queue<long>> _inputQueues = new List<Queue<long>>();
+        private NatDevice? _nat;
 
-        public void Send(long address, (long x, long y) packet) => GetQueueFor(address).Send(packet);
-        public Func<long> GetReceiver(long address) => () => GetQueueFor(address).Receive();
-        public bool HasUnhandledPackets() => _hostQueues.Any(q => !q.Value.IsEmpty);
+        public event Action<NetworkPacket> PacketGenerated = delegate {};
+        public event Action<int> Received = delegate {};
+        public event Action<int> ReceiveFailed = delegate {};
 
-        private HostQueue GetQueueFor(long address)
+        public void AddNat()
         {
-            return _hostQueues.GetOrAdd(address, id => new HostQueue(id));
+            _nat = new NatDevice(this);
         }
-        
-        private class HostQueue
+
+        public void AddNics(int count)
         {
-            private readonly ConcurrentQueue<long> _queue = new ConcurrentQueue<long>();
+            while (--count >= 0)
+                AddNic();
+        }
 
-            public bool IsEmpty => _queue.IsEmpty;
-            
-            public HostQueue(long address)
+        public void Step()
+        {
+            if (_nics.Count == 0) throw new InvalidOperationException("Nothing to run yet!");
+
+            foreach (var nic in _nics)
             {
-                _queue.Enqueue(address);
+                nic.Step();
             }
 
-            public long Receive()
+            _nat?.Step();
+        }
+
+        public void SendPacket(NetworkPacket packet)
+        {
+            PacketGenerated(packet);
+            if (packet.To >= _inputQueues.Count) return;
+            var queue = _inputQueues[packet.To];
+            queue.Enqueue(packet.X);
+            queue.Enqueue(packet.Y);
+        }
+
+        private void AddNic()
+        {
+            var address = _nics.Count;
+            var inputQueue = new Queue<long>(new[] { (long) address });
+
+            var nic = new IntCodeComputer();
+            nic.LoadProgram();
+
+            nic.InputFrom(() => ReceiveData(address));
+            nic.OutputTo(ReceiveInBatches.Of(3, batch => SendPacket(new NetworkPacket(address, batch))));
+
+            _inputQueues.Add(inputQueue);
+            _nics.Add(nic);
+        }
+
+        private long ReceiveData(int address)
+        {
+            var inputQueue = _inputQueues[address];
+            if (inputQueue.Count > 0)
             {
-                return _queue.TryDequeue(out long result) ? result : -1L;
+                Received(address);
+                return inputQueue.Dequeue();
             }
 
-            public void Send((long x, long y) packet)
-            {
-                _queue.Enqueue(packet.x);
-                _queue.Enqueue(packet.y);
-            }
+            ReceiveFailed(address);
+            return -1L;
         }
     }
 }

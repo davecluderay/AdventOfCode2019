@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using Aoc2019_Day17.Computer;
 
 namespace Aoc2019_Day17
@@ -14,16 +14,22 @@ namespace Aoc2019_Day17
         {
             var computer = new IntCodeComputer();
             computer.LoadProgram();
-            var screen = new string(computer.RunProgram().Select(o => (char) o).ToArray());
+
+            var screenBuffer = new StringBuilder();
+            computer.OutputTo(output => screenBuffer.Append((char) output));
+
+            computer.Run();
+
+            var screen = screenBuffer.ToString();
 
             var scaffoldPositions = FindScaffoldPositions(screen);
             var intersections = FindIntersections(scaffoldPositions);
             return intersections.Sum(p => p.x * p.y);
 
-            IEnumerable<(int x, int y)> FindScaffoldPositions(IEnumerable<char> screenBuffer)
+            IEnumerable<(int x, int y)> FindScaffoldPositions(IEnumerable<char> screenData)
             {
                 var (x, y) = (0, 0);
-                foreach (var @char in screenBuffer)
+                foreach (var @char in screenData)
                 {
                     switch (@char)
                     {
@@ -44,7 +50,7 @@ namespace Aoc2019_Day17
                     }
                 }
             }
-            
+
             IEnumerable<(int x, int y)> FindIntersections(IEnumerable<(int x, int y)> positions)
             {
                 var map = new HashSet<(int x, int y)>(positions);
@@ -61,27 +67,27 @@ namespace Aoc2019_Day17
             }
         }
 
-        public object PartTwo()
+        public object? PartTwo()
         {
             var computer = new IntCodeComputer();
             computer.LoadProgram();
-            computer.SetMemory(0, 2);
+            computer.PokeMemory(0, 2);
 
-            var inputs = GenerateInputs("A,B,A,B,C,C,B,C,B,A",
-                                        "R,12,L,8,R,12",
-                                        "R,8,R,6,R,6,R,8",
-                                        "R,8,L,8,R,8,R,4,R,4",
-                                        "n");
-            var outputs = computer.RunProgram(inputs).ToArray();
+            long? lastOutput = null;
+            computer.InputFrom(GenerateInputs("A,B,A,B,C,C,B,C,B,A",
+                                              "R,12,L,8,R,12",
+                                              "R,8,R,6,R,6,R,8",
+                                              "R,8,L,8,R,8,R,4,R,4",
+                                              "n"));
+            computer.OutputTo(output => lastOutput = output);
 
-            return outputs.Last();
-            
-            Func<long> GenerateInputs(string main, string a, string b, string c, string continuousVideoFeed)
-            {
-                var data = new Queue<long>(Encoding.ASCII.GetBytes(string.Join("\n", main, a, b, c, continuousVideoFeed, ""))
-                                                   .Select(@byte => (long)@byte));
-                return () => data.Dequeue();
-            }
+            computer.Run();
+
+            return lastOutput;
+
+            Queue<long> GenerateInputs(string main, string a, string b, string c, string continuousVideoFeed)
+                => new Queue<long>(Encoding.ASCII.GetBytes(string.Join("\n", main, a, b, c, continuousVideoFeed, ""))
+                                           .Select(@byte => (long) @byte));
         }
     }
 }

@@ -1,5 +1,4 @@
-using System.Linq;
-using Aoc2019_Day23.Computer;
+using System.Collections.Generic;
 
 namespace Aoc2019_Day23
 {
@@ -7,98 +6,47 @@ namespace Aoc2019_Day23
     {
         public string Title => "Day 23: Category Six";
 
-        public object PartOne()
+        public object? PartOne()
         {
-            var computers = Enumerable.Range(0, 50).Select(_ => CreateNicComputer()).ToArray();
-            
-            var network = new Network();
+            var network = CreateNetwork();
 
-            var outputStreams = computers.Select((c, a) => c.RunProgramIncrementally(network.GetReceiver(a))
-                                                            .GetEnumerator())
-                                         .ToArray();
+            NetworkPacket? packet = null;
+            network.PacketGenerated += p => packet = p.To == NatDevice.Address ? p : packet;
 
-            while (true)
-            {
-                foreach (var stream in outputStreams)
-                {
-                    if (!stream.MoveNext() || !stream.Current.IsOutput) continue;
-                    var to = stream.Current.OutputValue;
-                    
-                    while (stream.MoveNext())
-                        if (stream.Current.IsOutput) break;
-                    var x = stream.Current.OutputValue;
-                    
-                    while (stream.MoveNext())
-                        if (stream.Current.IsOutput) break;
-                    var y = stream.Current.OutputValue;
+            while (packet == null)
+                network.Step();
 
-                    network.Send(to, (x, y));
-
-                    if (to == NatDevice.Address)
-                    {
-                        return y;
-                    }
-                }
-            }
+            return packet?.Y;
         }
-        
+
         public object PartTwo()
         {
-            var computers = Enumerable.Range(0, 50).Select(_ => CreateNicComputer()).ToArray();
-            
-            var network = new Network();
-            var natDevice = new NatDevice(network);
 
-            var outputStreams = computers.Select((c, a) => c.RunProgramIncrementally(network.GetReceiver(a))
-                                                            .GetEnumerator())
-                                         .ToArray();
+            var network = CreateNetwork();
 
-            while (true)
-            {
-                for (var address = 0; address < outputStreams.Length; address++)
-                {
-                    var stream = outputStreams[address];
-                    
-                    if (!stream.MoveNext()) continue;
+            HashSet<long> yValuesSoFar = new HashSet<long>();
+            long? result = null;
+            network.PacketGenerated += p =>
+                                       {
+                                           if (p.To != 0L) return;
+                                           if (yValuesSoFar.Contains(p.Y))
+                                               result = p.Y;
+                                           else
+                                               yValuesSoFar.Add(p.Y);
+                                       };
 
-                    if (stream.Current.IsInput)
-                    {
-                        natDevice.CaptureReceiveAttempt(address, stream.Current.InputValue);
-                        continue;
-                    }
-                    
-                    if (stream.Current.IsOutput)
-                    {
-                        var to = stream.Current.OutputValue;
-                    
-                        while (stream.MoveNext()) if (stream.Current.IsOutput) break;
-                        var x = stream.Current.OutputValue;
-                        
-                        while (stream.MoveNext()) if (stream.Current.IsOutput) break;
-                        var y = stream.Current.OutputValue;
+            while (result is null)
+                network.Step();
 
-                        if (to == NatDevice.Address)
-                        {
-                            natDevice.ReceiveNatPacket((x, y));
-                        }
-                        else
-                        {
-                            network.Send(to, (x, y));
-                            natDevice.CaptureSend(from: address);
-                        }
-                    }
-                }
-
-                var result = natDevice.HandleIdleNetwork();
-                if (result.HasValue) return result.Value;
-            }
+            return result;
         }
 
-        private IntCodeComputer CreateNicComputer()
+        private static Network CreateNetwork()
         {
-            var computer = new IntCodeComputer();
-            computer.LoadProgram();
-            return computer;
+            var network = new Network();
+            network.AddNics(50);
+            network.AddNat();
+            return network;
         }
     }
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Aoc2019_Day09.Computer;
 
 namespace Aoc2019_Day09
@@ -8,20 +6,34 @@ namespace Aoc2019_Day09
     {
         public string Title => "Day 9: Sensor Boost";
 
-        public object PartOne()
+        public object? PartOne()
         {
-            var computer = new IntCodeComputer(new DebugOutput { WriteToConsole = false });
+            long? lastOutput = null;
+
+            var computer = new IntCodeComputer();
+
+            computer.InputFrom(1L);
+            computer.OutputTo(output => lastOutput = output);
+
             computer.LoadProgram();
-            return computer.RunProgram(1)
-                           .Last();
+            computer.Run();
+
+            return lastOutput;
         }
-        
-        public object PartTwo()
+
+        public object? PartTwo()
         {
-            var computer = new IntCodeComputer(new DebugOutput { WriteToConsole = false });
+            long? lastOutput = null;
+
+            var computer = new IntCodeComputer();
+
+            computer.InputFrom(2L);
+            computer.OutputTo(output => lastOutput = output);
+
             computer.LoadProgram();
-            return computer.RunProgram(2)
-                           .Last();
+            computer.Run();
+
+            return lastOutput;
         }
     }
 }

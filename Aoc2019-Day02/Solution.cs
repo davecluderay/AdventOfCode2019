@@ -1,40 +1,37 @@
+using System.Linq;
+using Aoc2019_Day02.Computer;
+
 namespace Aoc2019_Day02
 {
     internal class Solution
     {
         public string Title => "Day 2: 1202 Program Alarm";
 
-        public object PartOne()
+        public object? PartOne()
         {
-            var computer = new IntCodeComputer();
-
-            computer.LoadProgram();
-            
-            computer.EnterInputs(12, 2);
-
-            computer.RunProgram();
-            
-            return computer.GetResult();
+            return Execute(12, 2);
         }
 
-        public object PartTwo()
+        public object? PartTwo()
+        {
+            foreach (var noun in Enumerable.Range(0, 100))
+            foreach (var verb in Enumerable.Range(0, 100))
+                if (Execute(noun, verb) == 19690720)
+                    return noun * 100 + verb;
+            return null;
+        }
+
+        private long Execute(long noun, long verb)
         {
             var computer = new IntCodeComputer();
-            
-            for (var noun = 0; noun < 100; noun++)
-            for (var verb = 0; verb < 100; verb++)
-            {
-                computer.LoadProgram();
+            computer.LoadProgram();
 
-                computer.EnterInputs(noun, verb);
-                
-                computer.RunProgram();
+            computer.PokeMemory(1, noun);
+            computer.PokeMemory(2, verb);
 
-                if (computer.GetResult() == 19690720)
-                    return noun * 100 + verb;
-            }
+            computer.Run();
 
-            return null;
+            return computer.ReadMemory(0, 1).Single();
         }
     }
 }

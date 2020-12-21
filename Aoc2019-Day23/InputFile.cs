@@ -6,18 +6,18 @@ namespace Aoc2019_Day23
 {
     internal static class InputFile
     {
-        public static string[] ReadAllLines(string fileName = null)
+        public static string[] ReadAllLines(string? fileName = null)
         {
-            var directoryPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+            var directoryPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location) ?? ".";
             var filePath      = Path.Combine(directoryPath, fileName ?? "input.txt");
             if (!File.Exists(filePath)) throw new Exception($"File not found: {filePath}");
 
             return File.ReadAllLines(filePath);
         }
         
-        public static string ReadAllText(string fileName = null)
+        public static string ReadAllText(string? fileName = null)
         {
-            var directoryPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+            var directoryPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location) ?? ".";
             var filePath      = Path.Combine(directoryPath, fileName ?? "input.txt");
             if (!File.Exists(filePath)) throw new Exception($"File not found: {filePath}");
 

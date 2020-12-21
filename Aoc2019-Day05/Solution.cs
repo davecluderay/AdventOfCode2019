@@ -1,5 +1,4 @@
-using System;
-using System.Linq;
+using Aoc2019_Day05.Computer;
 
 namespace Aoc2019_Day05
 {
@@ -7,26 +6,24 @@ namespace Aoc2019_Day05
     {
         public string Title => "Day 5: Sunny with a Chance of Asteroids";
 
-        public object PartOne()
-        {
-            var computer = new IntCodeComputer();
-            
-            computer.LoadProgram();
-            
-            computer.RunProgram(1);
-            
-            if (computer.GetIntermediateOutput().Any(x => x != 0)) throw new Exception("Some failures occurred.");
-            
-            return computer.GetLastOutput();
-        }
-        
-        public object PartTwo()
-        {
-            var computer = new IntCodeComputer();
+        public object? PartOne()
+            => RunWithInput(1L);
 
-            computer.LoadProgram();
-            computer.RunProgram(5);
-            return computer.GetLastOutput();
+        public object? PartTwo()
+            => RunWithInput(5L);
+
+        private static long? RunWithInput(long input, string? fileName = null)
+        {
+            long? lastOutput = null;
+
+            var computer = new IntCodeComputer();
+            computer.InputFrom(input);
+            computer.OutputTo(output => lastOutput = output);
+
+            computer.LoadProgram(fileName);
+            computer.Run();
+
+            return lastOutput;
         }
     }
 }

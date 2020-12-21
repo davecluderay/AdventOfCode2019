@@ -10,7 +10,7 @@ namespace Aoc2019_Day19
                                                     dimensions: (50, 50));
 
             new ConsoleBeamRenderer().RenderBeam(buffer);
-            
+
             var affectedPoints = 0;
             foreach (var value in buffer)
                 if (value == 1)
@@ -19,7 +19,7 @@ namespace Aoc2019_Day19
             return affectedPoints;
         }
 
-        public object PartTwo()
+        public object? PartTwo()
         {
             var origin = FindOriginOfNearestSquareToFitBeam(startAtY: 1280);
 
@@ -28,9 +28,9 @@ namespace Aoc2019_Day19
                                                     excludeRegion: (origin.x, origin.y, origin.x + 99, origin.y + 99));
             new ConsoleBeamRenderer().RenderBeam(buffer,
                                                  objectAt: (10, 10, 109, 109));
-            
+
             return origin.x * 10_000 + origin.y;
-            
+
             (int x, int y) FindOriginOfNearestSquareToFitBeam(int startAtY)
             {
                 var scanner = new BeamScanner();
@@ -43,18 +43,18 @@ namespace Aoc2019_Day19
                     {
                         var extentAfter100 = scanner.GetBeamHorizontalExtent(atY: y + 99, extent.x);
                         var overlap = CalculateOverlap(extent, extentAfter100);
-            
+
                         if (overlap.length >= 100)
                         {
                             return (overlap.x, y);
                         }
                     }
-                
+
                     lastExtent = extent;
                     y++;
                 }
             }
-            
+
             (int x, int length) CalculateOverlap((int x, int length) extent1, (int x, int length) extent2)
             {
                 var (left, right) = extent1.x < extent2.x ? (extent1, extent2) : (extent2, extent1);

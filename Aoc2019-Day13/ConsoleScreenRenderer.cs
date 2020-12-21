@@ -2,21 +2,40 @@ using System;
 
 namespace Aoc2019_Day13
 {
-    internal static class ConsoleScreenRenderer
+    internal class ConsoleScreenRenderer
     {
-        public static void Render(ConsoleScreenBuffer buffer, (int x, int y) position)
+        private readonly ConsoleScreenBuffer _buffer;
+
+        public ConsoleScreenRenderer(ConsoleScreenBuffer buffer)
         {
-            var (minX, minY, _, _) = buffer.Bounds;
-            var tile = buffer.Get((minX + position.x, minY + position.y));
-            Render(buffer, position, tile);
+            _buffer = buffer;
+            _buffer.Changed += OnBufferChanged;
+            _buffer.ScoreChanged += OnScoreChanged;
         }
-        
-        public static void RenderScore(ConsoleScreenBuffer buffer, long score)
+
+        private void OnBufferChanged((int x, int y) position, TileType tile)
+        {
+            RenderAt(position);
+        }
+
+        private void OnScoreChanged(long score)
+        {
+            RenderScore(score);
+        }
+
+        public void RenderAt((int x, int y) position)
+        {
+            var (minX, minY, _, _) = _buffer.Bounds;
+            var tile = _buffer.Get((minX + position.x, minY + position.y));
+            Render(_buffer, position, tile);
+        }
+
+        public void RenderScore(long score)
         {
             var restorePosition = (x: Console.CursorLeft, y: Console.CursorTop);
-            
+
             Console.CursorLeft = 0;
-            Console.CursorTop = buffer.Bounds.bottom + 2;
+            Console.CursorTop = _buffer.Bounds.bottom + 2;
             Console.Write("SCORE: [ ");
 
             Console.ForegroundColor = ConsoleColor.Magenta;
@@ -36,7 +55,7 @@ namespace Aoc2019_Day13
             Console.SetCursorPosition(position.x, position.y);
             Console.ForegroundColor = color;
             Console.Write(@char);
-            
+
             Console.ResetColor();
             Console.SetCursorPosition(0, buffer.Bounds.bottom + 4);
         }
@@ -57,16 +76,14 @@ namespace Aoc2019_Day13
         private static char GetChar(TileType tile)
         {
             const char filledBlock     = '\u2588';
-            const char filledCircle    = '\u25cf';
-            const char filledRectangle = '\u25ac';
             const char space           = ' ';
-            
+
             switch (tile)
             {
                 case TileType.Wall:   return filledBlock;
                 case TileType.Block:  return filledBlock;
-                case TileType.Paddle: return filledRectangle;
-                case TileType.Ball:   return filledCircle;
+                case TileType.Paddle: return filledBlock;
+                case TileType.Ball:   return filledBlock;
                 case TileType.Empty:  return space;
                 default:              throw new ArgumentException("Unrecognised tile type.", nameof(tile));
             }

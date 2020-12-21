@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+
 using Aoc2019_Day25.Computer;
 
 namespace Aoc2019_Day25
@@ -8,7 +9,7 @@ namespace Aoc2019_Day25
     {
         public string Title => "Day 25: Cryostasis";
 
-        public object PartOne()
+        public object? PartOne()
         {
             var computer = new IntCodeComputer();
             computer.LoadProgram();
@@ -38,15 +39,15 @@ namespace Aoc2019_Day25
                                "north",
                                "west"
                            };
-            foreach (var output in computer.RunProgram(new AutoplayAdapter(commands).GetNextInput))
-            {
-                Console.Write(Encoding.ASCII.GetString(new[] { (byte) output }));
-            }
+            computer.InputFrom(new AutoplayAdapter(commands).GetNextInput);
+            computer.OutputTo(output => Console.Write(Encoding.ASCII.GetString(new[] { (byte) output })));
+
+            computer.Run();
 
             return "2228740";
         }
-        
-        public object PartTwo()
+
+        public object? PartTwo()
         {
             return "That's it!";
         }
