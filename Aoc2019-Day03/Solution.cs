@@ -8,7 +8,7 @@ namespace Aoc2019_Day03
     {
         public string Title => "Day 3: Crossed Wires";
 
-        public object PartOne()
+        public object? PartOne()
         {
             var data = WireData.Read();
             var intersections = FindIntersectionPoints(data.wire1, data.wire2);
@@ -17,8 +17,8 @@ namespace Aoc2019_Day03
                                 .Cast<int?>()
                                 .FirstOrDefault();
         }
-        
-        public object PartTwo()
+
+        public object? PartTwo()
         {
             var data = WireData.Read();
             var intersections = FindIntersectionPoints(data.wire1, data.wire2);
@@ -36,24 +36,24 @@ namespace Aoc2019_Day03
                 var intersect = CalculateIntersectionPoint(
                     wire1[index1], wire1[index1 + 1],
                     wire2[index2], wire2[index2 + 1]);
-                
+
                 if (intersect == null) continue;
                 if (intersect == (0, 0)) continue;
 
                 yield return intersect.Value;
             }
         }
-        
+
         private static (int x, int y)? CalculateIntersectionPoint((int x, int y) p1, (int x, int y) p2, (int x, int y) q1, (int x, int y) q2)
         {
             if ((p1.x == p2.x) == (q1.x == q2.x)) return null; // Parallel.
 
             var horizontal = p1.y == p2.y ? (x1: p1.x, x2: p2.x, y: p1.y) : (x1: q1.x, x2: q2.x, y: q1.y);
             var vertical  = p1.x == p2.x ? (x: p1.x, y1: p1.y, y2: p2.y) : (x: q1.x, y1: q1.y, y2: q2.y);
-            
+
             if (horizontal.y < Math.Min(vertical.y1, vertical.y2) || horizontal.y > Math.Max(vertical.y1, vertical.y2)) return null;
             if (vertical.x < Math.Min(horizontal.x1, horizontal.x2) || vertical.x > Math.Max(horizontal.x1, horizontal.x2)) return null;
-            
+
             return (vertical.x, horizontal.y);
         }
 
@@ -69,13 +69,13 @@ namespace Aoc2019_Day03
                 {
                     return distance + offset.Value;
                 }
-                
+
                 distance = distance + Math.Abs(p1.x - p2.x) + Math.Abs(p1.y - p2.y);
             }
 
             throw new Exception("Point not found on wire.");
         }
-        
+
         private static int? FindPointDistanceAlongSegment((int x, int y) p1, (int x, int y) p2, (int x, int y) p)
         {
             if (p1.x == p2.x && p1.x == p.x)
@@ -97,7 +97,7 @@ namespace Aoc2019_Day03
                     return Math.Abs(p.x - p1.x);
                 }
             }
-                
+
             return null;
         }
     }

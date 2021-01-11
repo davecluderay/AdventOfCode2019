@@ -11,7 +11,7 @@ namespace Aoc2019_Day10
         public object PartOne()
         {
             var asteroids = LoadAsteroidPoints();
-            
+
             var pairsWithVisibility = InAllPossiblePairs(asteroids)
                                       .Where(pair => asteroids.All(a => !IsPointDirectlyBetween(a, pair.Item1, pair.Item2)))
                                       .ToArray();
@@ -23,8 +23,8 @@ namespace Aoc2019_Day10
                             .OrderByDescending(a => a.Count)
                             .First();
         }
-        
-        public object PartTwo()
+
+        public object? PartTwo()
         {
             var laser = (22, 28);
             var asteroids = LoadAsteroidPoints()
@@ -75,7 +75,7 @@ namespace Aoc2019_Day10
             return angle;
         }
 
-        private static (int x, int y)[] LoadAsteroidPoints(string fileName = null)
+        private static (int x, int y)[] LoadAsteroidPoints(string? fileName = null)
         {
             return InputFile.ReadAllLines(fileName)
                             .SelectMany((row, y) => row.Select((@char, x) => (point: (x, y), @char)))
@@ -83,7 +83,7 @@ namespace Aoc2019_Day10
                             .Select(x => x.point)
                             .ToArray();
         }
-        
+
         private static bool IsPointDirectlyBetween((int x, int y) point, (int x, int y) start, (int x, int y) end)
         {
             if (point == start || point == end) return false;

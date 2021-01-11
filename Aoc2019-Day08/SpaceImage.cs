@@ -19,7 +19,7 @@ namespace Aoc2019_Day08
             Height = height;
         }
 
-        public static SpaceImage ReadImage(int width, int height, string fileName = null)
+        public static SpaceImage ReadImage(int width, int height, string? fileName = null)
         {
             var imageData = InputFile.ReadAllLines(fileName)
                                      .Single()

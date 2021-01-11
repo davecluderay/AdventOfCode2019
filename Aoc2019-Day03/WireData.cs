@@ -5,13 +5,13 @@ using Aoc2019_Day03;
 
 internal static class WireData
 {
-    public static ((int x, int y)[] wire1, (int x, int y)[] wire2) Read(string fileName = null)
+    public static ((int x, int y)[] wire1, (int x, int y)[] wire2) Read(string? fileName = null)
     {
         var lines = InputFile.ReadAllLines(fileName);
 
         return (ReadLineAsPoints(lines[0]).ToArray(), ReadLineAsPoints(lines[1]).ToArray());
     }
-    
+
     private static IEnumerable<(int x, int y)> ReadLineAsPoints(string line)
     {
         var (x, y) = (0, 0);

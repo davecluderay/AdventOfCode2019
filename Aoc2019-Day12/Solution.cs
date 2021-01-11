@@ -20,16 +20,16 @@ namespace Aoc2019_Day12
                     var xOffset = Math.Sign(pair.Item2.Position.x - pair.Item1.Position.x);
                     pair.Item1.Velocity.x += xOffset;
                     pair.Item2.Velocity.x -= xOffset;
-                    
+
                     var yOffset = Math.Sign(pair.Item2.Position.y - pair.Item1.Position.y);
                     pair.Item1.Velocity.y += yOffset;
                     pair.Item2.Velocity.y -= yOffset;
-                    
+
                     var zOffset = Math.Sign(pair.Item2.Position.z - pair.Item1.Position.z);
                     pair.Item1.Velocity.z += zOffset;
                     pair.Item2.Velocity.z -= zOffset;
                 }
-                
+
                 // Apply velocities.
                 foreach (var body in bodies)
                 {
@@ -38,9 +38,9 @@ namespace Aoc2019_Day12
                     body.Position.z += body.Velocity.z;
                 }
             }
-            
+
             return bodies.Sum(CalculateTotalEnergy);
-            
+
             int CalculateTotalEnergy(Body body)
             {
                 var potentialEnergy = Math.Abs(body.Position.x) + Math.Abs(body.Position.y) + Math.Abs(body.Position.z);
@@ -61,20 +61,20 @@ namespace Aoc2019_Day12
                                     };
 
             return Calculate.LowestCommonMultiple(repeatFrequencies);
-            
+
             long FindRepeatFrequencyOnAxis((int position, int velocity)[] positionsAndVelocities)
             {
                 var positions  = positionsAndVelocities.Select(b => b.position).ToArray();
                 var velocities = positionsAndVelocities.Select(b => b.velocity).ToArray();
-            
+
                 var history = new HashSet<string>();
                 while (true)
                 {
                     var asText = $"{string.Join(';', positions.Concat(velocities))}";
                     if (history.Contains(asText)) return history.Count;
-                
+
                     history.Add(asText);
-                
+
                     // Adjust velocities.
                     foreach (var indexes in Combine.IntoAllPossiblePairs(Enumerable.Range(0, positions.Length).ToArray()))
                     {
@@ -82,7 +82,7 @@ namespace Aoc2019_Day12
                         velocities[indexes.Item1] += delta;
                         velocities[indexes.Item2] -= delta;
                     }
-            
+
                     // Apply velocities.
                     for (int index = 0; index < positions.Length; index++)
                     {
@@ -92,8 +92,8 @@ namespace Aoc2019_Day12
             }
         }
 
-        private static Body[] LoadBodies(string fileName = null) => InputFile.ReadAllLines(fileName)
-                                                                             .Select(Body.Parse)
-                                                                             .ToArray();
+        private static Body[] LoadBodies(string? fileName = null) => InputFile.ReadAllLines(fileName)
+                                                                              .Select(Body.Parse)
+                                                                              .ToArray();
     }
 }

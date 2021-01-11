@@ -22,13 +22,13 @@ namespace Aoc2019_Day18
                 Type == FeatureType.Key ? char.ToLower(Letter) : Letter).ToString();
             //return $"{Type} {Letter} at {Position}";
         }
-        
+
         public bool Equals(MapFeature other)
         {
             return Position.Equals(other.Position) && Type == other.Type && Letter == other.Letter;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is MapFeature other && Equals(other);
         }

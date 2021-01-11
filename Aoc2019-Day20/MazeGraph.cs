@@ -17,7 +17,7 @@ namespace Aoc2019_Day20
         public static MazeGraph From(GridMap map)
         {
             var allVertices = new Dictionary<(int row, int column), Vertex>();
-            
+
             // Discover all vertices.
             for (var row = 0; row < map.Rows; row++)
             for (var column = 0; column < map.Columns; column++)
@@ -65,15 +65,15 @@ namespace Aoc2019_Day20
                         {
                             lastVisitedPositions.Add(next);
                         }
-                        
+
                         allVisitedPositions.Add(next);
                     }
                 }
             }
-            
+
             return new MazeGraph(allVertices.Values);
         }
-        
+
         public class Vertex
         {
             private readonly List<Edge> _edges = new List<Edge>();
@@ -96,7 +96,7 @@ namespace Aoc2019_Day20
                     numberOfSteps = Math.Min(numberOfSteps, existingEdge.NumberOfSteps);
                     DisconnectFrom(other);
                 }
-                
+
                 _edges.Add(new Edge(other, numberOfSteps));
                 other._edges.Add(new Edge(this, numberOfSteps));
             }
@@ -110,7 +110,7 @@ namespace Aoc2019_Day20
                 }
             }
 
-            public override string ToString() =>
+            public override string? ToString() =>
                 Type switch
                 {
                     VertexType.Entrance          => $"{Label} (entrance)",
@@ -134,7 +134,7 @@ namespace Aoc2019_Day20
 
             public override string ToString() => $" -{NumberOfSteps}-> {To}";
         }
-        
+
         public enum VertexType
         {
             Entrance,

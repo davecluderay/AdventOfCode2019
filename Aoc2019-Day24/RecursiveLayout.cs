@@ -27,21 +27,21 @@ namespace Aoc2019_Day24
         {
         }
 
-        public RecursiveLayout(RecursiveLayout innerLevel, RecursiveLayout outerLevel)
+        public RecursiveLayout(RecursiveLayout? innerLevel, RecursiveLayout? outerLevel)
             : this(null, innerLevel, outerLevel)
         {
         }
 
-        private RecursiveLayout(string[] lines, RecursiveLayout innerLevel, RecursiveLayout outerLevel)
+        private RecursiveLayout(string[]? lines, RecursiveLayout? innerLevel, RecursiveLayout? outerLevel)
         {
             Level = innerLevel?.Level - 1 ?? outerLevel?.Level + 1 ?? 0;
             _innerLevel = new Lazy<RecursiveLayout>(() => innerLevel ?? new RecursiveLayout(null, this));
             _outerLevel = new Lazy<RecursiveLayout>(() => outerLevel ?? new RecursiveLayout(this, null));
-            
-            Rows = innerLevel?.Rows ?? outerLevel?.Rows ?? lines.Length;
-            Columns = innerLevel?.Columns ?? outerLevel?.Columns ?? lines.First().Length;
+
+            Rows = innerLevel?.Rows ?? outerLevel?.Rows ?? lines?.Length ?? 0;
+            Columns = innerLevel?.Columns ?? outerLevel?.Columns ?? lines?.First().Length ?? 0;
             CentrePosition = (Rows / 2, Columns / 2);
-            
+
             _data = new char[Rows, Columns];
 
             foreach (var position in AllPositionsAtThisLevel)
@@ -65,10 +65,10 @@ namespace Aoc2019_Day24
         {
             foreach (var a in GetAdjacentPositionsAtThisLevel(to))
                 yield return (level: this, position: a);
-            
+
             foreach (var a in GetAdjacentPositionsAtOuterLevel(to))
                 yield return (level: _outerLevel.Value, position: a);
-            
+
             foreach (var a in GetAdjacentPositionsAtInnerLevel(to))
                 yield return (level: _innerLevel.Value, position: a);
         }
@@ -76,7 +76,7 @@ namespace Aoc2019_Day24
         public IEnumerable<(RecursiveLayout level, (int row, int column) position)> FindBugsAtAllLevels()
         {
             var bugs = FindBugsAtThisLevel().Select(p => (this, p));
-            
+
             var inner = InnerLevel;
             while (inner.HasBeenInfested)
             {
@@ -84,7 +84,7 @@ namespace Aoc2019_Day24
                 bugs = bugs.Concat(inner.FindBugsAtThisLevel().Select(p => (level, p)));
                 inner = inner.InnerLevel;
             }
-            
+
             var outer = OuterLevel;
             while (outer.HasBeenInfested)
             {
@@ -102,7 +102,7 @@ namespace Aoc2019_Day24
         {
             return _data[position.row, position.column];
         }
-        
+
         private void SetAt((int row, int column) position, char @char)
         {
             if (@char == Bug) HasBeenInfested = true;
@@ -134,23 +134,23 @@ namespace Aoc2019_Day24
                           .Where(pos => pos.row >= 0 && pos.column >= 0 && pos.row < Rows && pos.column < Columns)
                           .Where(p => p != CentrePosition);
         }
-        
+
         private IEnumerable<(int row, int column)> GetAdjacentPositionsAtOuterLevel((int row, int column) to)
         {
             // If it's an outer position, it is considered adjacent to the corresponding inner position on level - 1.
-            if (to.row == 0) 
+            if (to.row == 0)
                 yield return (CentrePosition.row - 1, CentrePosition.column);
-            
+
             if (to.row == Rows - 1)
                 yield return (CentrePosition.row + 1, CentrePosition.column);
-            
+
             if (to.column == 0)
                 yield return (CentrePosition.row, CentrePosition.column - 1);
-            
+
             if (to.column == Columns - 1)
                 yield return (CentrePosition.row, CentrePosition.column + 1);
         }
-        
+
         private IEnumerable<(int row, int column)> GetAdjacentPositionsAtInnerLevel((int row, int column) to)
         {
             // If it's an outer position, it is considered adjacent to the corresponding outer positions on level + 1.
@@ -161,11 +161,11 @@ namespace Aoc2019_Day24
             if (to.row == CentrePosition.row + 1 && to.column == CentrePosition.column)
                 for (var column = 0; column < Columns; column++)
                     yield return (Rows - 1, column);
-            
+
             if (to.column == CentrePosition.column - 1 && to.row == CentrePosition.row)
                 for (var row = 0; row < Rows; row++)
                     yield return (row, 0);
-            
+
             if (to.column == CentrePosition.column + 1 && to.row == CentrePosition.row)
                 for (var row = 0; row < Rows; row++)
                     yield return (row, Columns - 1);

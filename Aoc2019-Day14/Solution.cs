@@ -11,7 +11,7 @@ namespace Aoc2019_Day14
             var reactions = LoadChemicalReactions();
             var reactors = reactions.Select(reaction => new ChemicalReactor(reaction))
                                     .ToArray();
-            
+
             reactors.Single(r => r.ProductName == "FUEL")
                     .Produce(reactors, 1);
             return reactors.Single(r => r.ProductName == "ORE")
@@ -31,7 +31,7 @@ namespace Aoc2019_Day14
 
                 var reactors = reactions.Select(reaction => new ChemicalReactor(reaction))
                                         .ToArray();
-            
+
                 var fuel = reactors.Single(r => r.ProductName == "FUEL");
                 fuel.Produce(reactors, nextTest);
 
@@ -45,7 +45,7 @@ namespace Aoc2019_Day14
             return maxSuccessQuantity;
         }
 
-        private ChemicalReaction[] LoadChemicalReactions(string fileName = null)
+        private ChemicalReaction[] LoadChemicalReactions(string? fileName = null)
         {
             return InputFile.ReadAllLines(fileName)
                                      .Select(ChemicalReaction.Parse)
