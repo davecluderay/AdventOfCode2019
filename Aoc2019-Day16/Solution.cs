@@ -15,7 +15,7 @@ namespace Aoc2019_Day16
                                   .Single()
                                   .Select(c => c - '0')
                                   .ToArray();
-            
+
             return Transform(signal);
         }
 
@@ -23,7 +23,7 @@ namespace Aoc2019_Day16
         {
             var signalText = InputFile.ReadAllLines()
                                       .Single();
-            
+
             var messageOffset = Convert.ToInt32(signalText.Substring(0, 7));
 
             var signal = signalText.Select(c => c - '0')
@@ -33,21 +33,19 @@ namespace Aoc2019_Day16
             return Transform(signal, messageOffset: messageOffset);
         }
 
-        private string Transform(int[] signal, int iterations = 100, int messageOffset = 0)
+        private string Transform(int[] signal, int phases = 100, int messageOffset = 0)
         {
             var inputSignal = (int[])signal.Clone();
             var outputSignal = (int[])signal.Clone();
-            for (var n = 0; n < iterations; n++)
+            for (var phase = 0; phase < phases; phase++)
             {
-                Console.Write('.');
                 Swap(ref inputSignal, ref outputSignal);
-                TransformSignal(inputSignal, outputSignal);
+                TransformSignal(inputSignal, outputSignal, messageOffset);
             }
-            Console.WriteLine();
 
             return string.Join("", outputSignal.Skip(messageOffset).Take(8));
 
-            void Swap<T>(ref T ref1, ref T ref2)
+            static void Swap<T>(ref T ref1, ref T ref2)
             {
                 var temp = ref1;
                 ref1 = ref2;
@@ -55,45 +53,46 @@ namespace Aoc2019_Day16
             }
         }
 
-        private void TransformSignal(int[] inputSignal, int[] outputSignal)
+        private void TransformSignal(int[] inputSignal, int[] outputSignal, int messageOffset = 0)
         {
-            var cumulativeSums = new long[inputSignal.Length + 1];
-            for (var index = 0; index < inputSignal.Length; index++)
+            // Note: If we are only interested in the output values from a certain offset,
+            //       we don't need to calculate the values before that offset in ANY of the phases.
+            //       There are some special cases if the offset is in the second half of the signal,
+            //       but this is adequate performance and will work for any offset.
+
+            var cumulativeSums = new Dictionary<int, int> { [messageOffset] = 0 };
+            for (var index = messageOffset; index < inputSignal.Length; index++)
             {
-                cumulativeSums[index + 1] = (cumulativeSums[index] + inputSignal[index]);
+                cumulativeSums[index + 1] = cumulativeSums[index] + inputSignal[index];
             }
 
-            Parallel.For(0,
+            Parallel.For(messageOffset,
                          inputSignal.Length,
-                         (index, _) =>
+                         index =>
                          {
                              var outputAtIndex = 0;
-                             foreach (var segment in TransformPattern.AtIndex(index, inputSignal.Length))
+                             foreach (var segment in TransformPattern.AtIndex(index, inputSignal.Length, messageOffset))
                              {
-                                 outputAtIndex += (int) (cumulativeSums[segment.StartIndex + segment.Length] - cumulativeSums[segment.StartIndex]) * segment.Multiplier;
+                                 var sum = cumulativeSums[segment.StartIndex + segment.Length] - cumulativeSums[segment.StartIndex];
+                                 outputAtIndex += sum * segment.Multiplier;
                              }
 
-                             outputSignal[index] = Math.Abs(outputAtIndex) % 10;
+                             outputSignal[index] = Math.Abs(outputAtIndex % 10);
                          });
         }
 
-        private class TransformPattern
+        private static class TransformPattern
         {
             public class Segment
             {
                 public int StartIndex { get; }
                 public int Length { get; }
                 public int Multiplier { get; }
-
                 public Segment(int startIndex, int length, int multiplier)
-                {
-                    StartIndex = startIndex;
-                    Length = length;
-                    Multiplier = multiplier;
-                }
+                    => (StartIndex, Length, Multiplier) = (startIndex, length, multiplier);
             }
 
-            public static IEnumerable<Segment> AtIndex(int signalIndex, int signalLength)
+            public static IEnumerable<Segment> AtIndex(int signalIndex, int signalLength, int fromOffset)
             {
                 var multiplierSequence = new[] { 0, 1, 0, -1 };
 
@@ -103,6 +102,8 @@ namespace Aoc2019_Day16
                 while (true)
                 {
                     if (nextStartIndex >= signalLength) yield break;
+
+                    if (nextStartIndex + signalLength < fromOffset) continue;
 
                     var multiplier = multiplierSequence[nextMultiplierIndex];
                     if (isFirstSegment)

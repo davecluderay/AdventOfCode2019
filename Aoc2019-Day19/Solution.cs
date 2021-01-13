@@ -9,8 +9,6 @@ namespace Aoc2019_Day19
             var buffer = new BeamScanner().ScanBeam(origin: (0, 0),
                                                     dimensions: (50, 50));
 
-            new ConsoleBeamRenderer().RenderBeam(buffer);
-
             var affectedPoints = 0;
             foreach (var value in buffer)
                 if (value == 1)
@@ -26,8 +24,6 @@ namespace Aoc2019_Day19
             var buffer = new BeamScanner().ScanBeam(origin: (origin.x - 10, origin.y - 10),
                                                     dimensions: (120, 120),
                                                     excludeRegion: (origin.x, origin.y, origin.x + 99, origin.y + 99));
-            new ConsoleBeamRenderer().RenderBeam(buffer,
-                                                 objectAt: (10, 10, 109, 109));
 
             return origin.x * 10_000 + origin.y;
 

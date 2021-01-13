@@ -16,12 +16,10 @@ namespace Aoc2019_Day15
         public object PartTwo()
         {
             var map = new LayoutMap();
-            using var renderer = new ConsoleLayoutMapRenderer(map);
 
-            FillMap(map, renderer);
+            FillMap(map);
 
             map.Set(map.OxygenSystemPosition ?? default, SpaceType.Oxygenated);
-            renderer.Render();
 
             var minutesPassed = 0;
             while (map.SpaceCount(SpaceType.Empty) > 0)
@@ -36,12 +34,9 @@ namespace Aoc2019_Day15
                     if (map.Get(position) != SpaceType.Wall)
                     {
                         map.Set(position, SpaceType.Oxygenated);
-                        renderer?.Render(position);
                     }
                 }
             }
-
-            renderer?.Render();
 
             return minutesPassed;
         }

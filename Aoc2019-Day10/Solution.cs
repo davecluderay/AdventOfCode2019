@@ -21,7 +21,8 @@ namespace Aoc2019_Day10
                                              Count = pairsWithVisibility.Count(p => p.Item1 == a || p.Item2 == a)
                                          })
                             .OrderByDescending(a => a.Count)
-                            .First();
+                            .First()
+                            .Count;
         }
 
         public object? PartTwo()

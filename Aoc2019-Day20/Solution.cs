@@ -10,7 +10,6 @@ namespace Aoc2019_Day20
         {
             var lines = InputFile.ReadAllLines();
             var map = new GridMap(lines);
-            new MapRenderer().Render(map);
             
             var journeyFinder = new PartOneJourneyFinder();
             return journeyFinder.FindShortestJourneyStepCount(map);
@@ -21,8 +20,7 @@ namespace Aoc2019_Day20
             var lines = InputFile.ReadAllLines();
 
             var map = new GridMap(lines);
-            new MapRenderer().Render(map);
-            
+
             var graph = MazeGraph.From(map);
 
             int maxRecursionLevel = 1;

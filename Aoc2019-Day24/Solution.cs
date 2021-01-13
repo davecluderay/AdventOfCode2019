@@ -10,14 +10,10 @@ namespace Aoc2019_Day24
         public object PartOne()
         {
             var layout = new Layout(InputFile.ReadAllLines());
-            var layoutRenderer = new LayoutRenderer();
-            layoutRenderer.Render(layout);
 
             var biodiversityRatingsSoFar = new HashSet<int>();
-            var minute = 0;
             while (true)
             {
-                ++minute;
                 var bugPositions = new HashSet<(int row, int column)>();
                 foreach (var position in layout.AllPositions)
                 {
@@ -44,7 +40,6 @@ namespace Aoc2019_Day24
                 var biodiversityRating = layout.CalculateBiodiversityRating();
                 if (biodiversityRatingsSoFar.Contains(biodiversityRating))
                 {
-                    layoutRenderer.Render(layout, minute);
                     return biodiversityRating;
                 }
 
@@ -55,8 +50,6 @@ namespace Aoc2019_Day24
         public object PartTwo()
         {
             var layout = new RecursiveLayout(InputFile.ReadAllLines());
-            var layoutRenderer = new LayoutRenderer();
-            layoutRenderer.Render(layout);
 
             const int runForMinutes = 200;
             for (var minute = 1; minute <= runForMinutes; minute++)
@@ -90,11 +83,6 @@ namespace Aoc2019_Day24
                         p.level.SetBugAt(p.position);
                     else
                         p.level.SetEmptySpaceAt(p.position);
-                }
-
-                if (minute == runForMinutes)
-                {
-                    layoutRenderer.Render(layout, minute);
                 }
             }
 

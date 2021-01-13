@@ -8,9 +8,6 @@ namespace Aoc2019_Day18
         {
             var map = new GridMap(InputFile.ReadAllLines());
 
-            var renderer = new MapRenderer();
-            renderer.Render(map);
-
             var featureGraph = FeatureGraph.From(map);
             var journeyFinder = new JourneyFinder();
             var numberOfSteps = journeyFinder.FindShortestJourneyStepCount(featureGraph);
@@ -21,9 +18,6 @@ namespace Aoc2019_Day18
         {
             var map = new GridMap(InputFile.ReadAllLines());
             map.IsolateQuadrants();
-
-            var renderer = new MapRenderer();
-            renderer.Render(map);
             
             var featureGraph  = FeatureGraph.From(map);
             var journeyFinder = new JourneyFinder();
