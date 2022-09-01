@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Aoc2019_Day10
 {
     internal class Solution
@@ -10,110 +6,83 @@ namespace Aoc2019_Day10
 
         public object PartOne()
         {
-            var asteroids = LoadAsteroidPoints();
-
-            var pairsWithVisibility = InAllPossiblePairs(asteroids)
-                                      .Where(pair => asteroids.All(a => !IsPointDirectlyBetween(a, pair.Item1, pair.Item2)))
-                                      .ToArray();
-            return asteroids.Select(a => new
-                                         {
-                                             Asteroid = a,
-                                             Count = pairsWithVisibility.Count(p => p.Item1 == a || p.Item2 == a)
-                                         })
-                            .OrderByDescending(a => a.Count)
-                            .First()
-                            .Count;
+            var asteroids = LoadAsteroidPositions();
+            return SelectMonitoringStationAsteroid(asteroids).NumberOfVisibleAsteroids;
         }
 
-        public object? PartTwo()
+        public object PartTwo()
         {
-            var laser = (22, 28);
-            var asteroids = LoadAsteroidPoints()
-                            .Where(asteroid => laser != asteroid)
-                            .ToArray();
+            var asteroids = LoadAsteroidPositions();
+            var station = SelectMonitoringStationAsteroid(asteroids).Position;
+            var vaporized = Vaporize(station, asteroids);
+            var number200 = vaporized.Skip(199).First();
+            return number200.X * 100 + number200.Y;
+        }
 
-            var remaining = asteroids
-                            .Select(asteroid => new
-                                                {
-                                                    Asteroid = asteroid,
-                                                    Angle = CalculateAngle(laser, asteroid),
-                                                    Distance = CalculateDistance(laser, asteroid)
-                                                })
-                            .GroupBy(a => a.Angle)
-                            .OrderBy(g => g.Key)
-                            .Select(g => new
-                                         {
-                                             Angle = g.Key,
-                                             Asteroids = new Queue<(int x, int y)>(g.OrderBy(x => x.Distance)
-                                                                                    .Select(x => x.Asteroid))
-                                         })
-                            .ToList();
+        private static (Position Position, int NumberOfVisibleAsteroids) SelectMonitoringStationAsteroid(IReadOnlyCollection<Position> asteroids)
+        {
+            return asteroids.Select(a => (Position: a,
+                                          AngleCount: asteroids.Where(x => x != a)
+                                                               .GroupBy(x => CalculateAngle(a, x))
+                                                               .Count()))
+                            .MaxBy(g => g.AngleCount)!;
+        }
 
-            var vapourised = 0;
-            while (remaining.Any())
+        private static IEnumerable<Position> Vaporize(Position station, IReadOnlyCollection<Position> asteroids)
+        {
+            var orientations = asteroids.Where(a => a != station)
+                                        .Select(a => (Position: a,
+                                                      Angle: CalculateAngle(station, a),
+                                                      Distance: CalculateDistance(station, a)))
+                                        .GroupBy(x => x.Angle)
+                                        .Select(g => (Angle: g.Key,
+                                                      RemainingAsteroids: new Queue<Position>(g.OrderBy(a => a.Distance)
+                                                                                               .Select(a => a.Position))))
+                                        .OrderBy(x => x.Angle)
+                                        .ToList();
+
+            while (orientations.Count > 0)
             {
-                foreach (var angle in remaining)
+                foreach (var orientation in orientations)
                 {
-                    var asteroid = angle.Asteroids.Dequeue();
-                    if (++vapourised == 200) return $"{asteroid.x * 100 + asteroid.y}";
+                    if (orientation.RemainingAsteroids.Count > 0)
+                    {
+                        yield return orientation.RemainingAsteroids.Dequeue();
+                    }
                 }
 
-                remaining.RemoveAll(a => !a.Asteroids.Any());
+                orientations.RemoveAll(o => o.RemainingAsteroids.Count == 0);
             }
-
-            return null;
         }
 
-        private double CalculateDistance((int x, int y) laser, (int x, int y) asteroid)
+        private static double CalculateAngle(Position p1, Position p2)
         {
-            return Math.Sqrt(Math.Pow(asteroid.x - laser.x, 2) + Math.Pow(asteroid.y - laser.y, 2));
+            var angle = Math.Atan2(p2.X - p1.X, p1.Y - p2.Y);
+            if (angle < 0) angle += 2 * Math.PI;
+            return Math.Round(angle, 3);
         }
 
-        private double CalculateAngle((int x, int y) laser, (int x, int y) asteroid)
+        private static double CalculateDistance(Position p1, Position p2)
         {
-            var angle = Math.Atan2(asteroid.x - laser.x, laser.y - asteroid.y) * 180 / Math.PI;
-            if (angle < 0) angle = 360 + angle;
-            return angle;
+            return Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
         }
 
-        private static (int x, int y)[] LoadAsteroidPoints(string? fileName = null)
+        private static IReadOnlyList<Position> LoadAsteroidPositions(string? fileName = null)
         {
-            return InputFile.ReadAllLines(fileName)
-                            .SelectMany((row, y) => row.Select((@char, x) => (point: (x, y), @char)))
-                            .Where(x => x.@char == '#')
-                            .Select(x => x.point)
-                            .ToArray();
+            return File.ReadAllLines(fileName ?? "./input.txt")
+                       .SelectMany((row, y) => row.Select((@char, x) => (point: new Position(x, y), @char)))
+                       .Where(x => x.@char == '#')
+                       .Select(x => x.point)
+                       .ToList()
+                       .AsReadOnly();
         }
+    }
 
-        private static bool IsPointDirectlyBetween((int x, int y) point, (int x, int y) start, (int x, int y) end)
+    internal record struct Position(int X, int Y)
+    {
+        public static implicit operator Position((int X, int Y) position)
         {
-            if (point == start || point == end) return false;
-            return IsPointOnLine((start, end), point);
-        }
-
-        private static bool IsPointOnLine(((int x, int y) p, (int x, int y) q) line, (int x, int y) point)
-        {
-            var (p, q) = (line.p, line.q);
-
-            if (point == p || point == q) return true;
-
-            if (point.x < Math.Min(p.x, q.x) ||
-                point.x >  Math.Max(p.x, q.x) ||
-                point.y < Math.Min(p.y, q.y) ||
-                point.y > Math.Max(p.y, q.y)) return false;
-
-            if (p.x == q.x || p.y == q.y) return true;
-
-            var expectedY = point.x * (q.y - p.y) / (decimal) (q.x - p.x) +
-                            (p.y - (q.y - p.y) * p.x / (decimal) (q.x - p.x));
-            return point.y == expectedY;
-        }
-
-        private static IEnumerable<(T, T)> InAllPossiblePairs<T>(IReadOnlyList<T> items)
-        {
-            for (var index0 = 0; index0 < items.Count - 1; index0++)
-            for (var index1 = index0 + 1; index1 < items.Count; index1++)
-                yield return (items[index0], items[index1]);
+            return new(position.X, position.Y);
         }
     }
 }

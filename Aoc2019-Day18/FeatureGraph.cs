@@ -17,7 +17,7 @@ namespace Aoc2019_Day18
 
         public Node FindNode(MapFeature feature) => _allNodes[feature];
 
-        public Node FindGateNode(char letter)
+        public Node? FindGateNode(char letter)
             => _allNodes.Values.SingleOrDefault(n => n.Feature.Type == FeatureType.Gate && n.Feature.Letter == letter);
 
         public static FeatureGraph From(GridMap gridMap)
